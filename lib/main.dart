@@ -25,6 +25,28 @@ void main()
     runApp(Ori-doi_App());
 }
 
+class Tile{
+    final int x;
+    final int y;
+    int val;
+    Animation<double> animatedX;
+    Animation<double> animatedY;
+    Animation<int> animatedValue;
+    Animation<double> scale
+
+    Tile(this.x, this.y, this.val){
+        resetAnimations();
+    }
+    void resetAnimation() {
+        animatedX = AlwaysStoppedAnimation(this.x.toDouble());
+        animatedY = AlwaysStoppedAnimation(this.y.toDouble());
+        animatedValue = AlwaysStoppedAnimation(this.val);
+        scale = AlwaysStoppedAnimation(1.0);
+    }
+}
+
+
+
 class Ori-doi_App extends StatelessWidget
 {
     @override
@@ -45,17 +67,23 @@ class Ori-doi extends StatefulWidget
 
 class Ori-doi_State extends State<Ori-doi>
 {
+    List<List<Tile>> grid = List.generate(4, (y)=>List.generate(4, (x) => Tile(x, y, 0)))
+    Iterable<Tile> get flattenedGrid=>grid.expand((e)=>e);
     @override
     Widget build(BuildContext context){
         double gridSize = MediaQuery.of(context).size.width - 16.0 * 2;
+        double tileSize = (gridSize - 4.0 * 2)/4;
         return Scaffold(
             backgroundColor: tan,
-            body: Container(
-                width: gridSize,
-                height: gridSize,
-                padding: EdgeInsets.all(4.0),
-                decoration: BoxDecoration(
-                    
+            body: Center(
+                    child: Container(
+                        width: gridSize,
+                        height: gridSize,
+                        padding: EdgeInsets.all(4.0),
+                        decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8.0), color: darkBrown),
+
+                    ),
                 ),
             ),
         );
