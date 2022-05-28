@@ -45,6 +45,32 @@ class Tile
         animatie_val = AlwaysStoppedAnimation(this.val);
         scale = AlwaysStoppedAnimation(1.0);
     }
+    void moveTo(Animation<double> parent, int x, int y){
+        animatie_x = Tween(begin: this.x.toDouble(), end: x.toDouble())
+            .animate(CurvedAnimation(parent: parent, curve: Interval(0, .5)));
+        animatie_y = Tween(begin: this.y.toDouble(), end: y.toDouble())
+            .animate(CurvedAnimation(parent: parent, curve: Interval(0, .5)));
+    }
+    void bounce(Animation<double> parent){
+        scale = TweenSequence([
+            TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.2), weight: 1.0),
+            TweenSequenceItem(tween: Tween(begin: 1.2, end: 1.0), weight: 1.0),
+        ]).animate(CurvedAnimation(parent: parent, curve: Interval(.5, 1.0)));
+    }
+
+    void appear(Animation<double> parent){
+        scale = Tween(begin: 0.0, end: 1.0)
+            .animate(CurvedAnimation(parent: parent, curve: Interval(.5, 1.0)));
+    }
+
+    void schimbareNumar(Animation<double> parent, int new_val){
+        animatie_val = TweenSequence([
+            TweenSequenceItem(tween: ConstantTween(val), weight: .01),
+            TweenSequenceItem(tween: ConstantTween(new_val), weight: .99),
+        ])
+            .animate(CurvedAnimation(parent: parent, curve: Interval(.5, 1.0)));
+    }
+
 }
 
 class ori_doiApp extends StatelessWidget
@@ -69,6 +95,7 @@ class ori_doiState extends State<ori_doi> with TickerProviderStateMixin
 {
     AnimationController controller;
     List<List<Tile>> grid = List.generate(4, (y) => List.generate(4, (x) => Tile(x, y, 0)));
+    List<Tile> toAdd = [];
     Iterable<Tile> get flattenedGrid => grid.expand((e) => e);
     Iterable<List<Tile>> get cols => List.generate(4, (x) => List.generate(4, (y) => grid[y][x]));
 
@@ -77,11 +104,26 @@ class ori_doiState extends State<ori_doi> with TickerProviderStateMixin
     {
         super.initState();
         controller = AnimationController(vsync: this, duration: Duration(milliseconds: 200));
+        controller.addStatusListener((status)  {if (status == AnimationStatus.completed){
+            toAdd.forEach((element){grid[element.y][element.x].val = element.val;
+            });
+            flattenedGrid.forEach((element) {
+                element.resetAnimatii();
+            });
+            toAdd.clear();
+        }
+        });
         
         grid[1][2].val = 4;
         grid[3][2].val = 16;
         
         flattenedGrid.forEach((element) => element.resetAnimatii());
+    }
+
+    void adaugaTile(){
+        List<Tile> empty = flattenedGrid.where((e) => e.val == 0).toList();
+        empty.shuffle();
+        toAdd.add(Tile(empty.first.x, empty.first.y, 2)..appear(controller));
     }
 
     @override
@@ -103,15 +145,15 @@ class ori_doiState extends State<ori_doi> with TickerProviderStateMixin
                         borderRadius: BorderRadius.circular(8.0), color: lightBrown),
             )),
         )));
-        stackItems.addAll(flattenedGrid.map((e) => AnimatedBuilder(animation: controller, builder: (context, child) => e.animatie_val.value == 0 ? SizedBox() : Positioned(
-            left: e.x * tileSize,
-            top: e.y * tileSize,
+        stackItems.addAll([flattenedGrid, toAdd].expand((e) => e).map((e) => AnimatedBuilder(animation: controller, builder: (context, child) => e.animatie_val.value == 0 ? SizedBox() : Positioned(
+            left: e.animatie_x.value * tileSize,
+            top: e.animatie_y.value * tileSize,
             width: tileSize,
             height: tileSize,
             child: Center(
                 child: Container(
-                    width: tileSize - 4.0 * 2,
-                    height: tileSize - 4.0 * 2,
+                    width: (tileSize - 4.0 * 2) * e.scale.value,
+                    height: (tileSize - 4.0 * 2) * e.scale.value,
                     decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8.0),
                         color: numTileColor[e.animatie_val.value]),
@@ -162,7 +204,7 @@ class ori_doiState extends State<ori_doi> with TickerProviderStateMixin
     {
         setState(() {
             swipeFn();
-            //adauga tile
+            adaugaTile();
             controller.forward(from: 0);
         });
     }
@@ -213,10 +255,15 @@ class ori_doiState extends State<ori_doi> with TickerProviderStateMixin
                 }
                 if (tiles[i] != t || merge != null) {
                     int resultValue = t.val;
+                    t.moveTo(controller, tiles[i].x, tiles[i].y);
                     // animeaza tile la pozitia t
                     if (merge != null) {
                         resultValue += merge.val;
+                        merge.moveTo(controller, tiles[i].x, tiles[i].y);
+                        merge.bounce(controller);
+                        merge.schimbareNumar(controller, resultValue);
                         merge.val = 0;
+                        t.schimbareNumar(controller, 0);
                     }
                     t.val = 0;
                     tiles[i].val = resultValue;
