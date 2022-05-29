@@ -8,7 +8,7 @@ const Color greyText = Color.fromARGB(255, 119, 110, 101);
 const Map<int, Color> numTileColor =
 {
     2: tan,
-    4: tan,
+    4: Color.fromARGB(255, 237, 224, 200),
     8: Color.fromARGB(255, 242, 177, 121),
     16: Color.fromARGB(255, 245, 149, 99),
     32: Color.fromARGB(255, 246, 124, 95),
@@ -208,7 +208,6 @@ class ori_doiState extends State<ori_doi> with TickerProviderStateMixin
             controller.forward(from: 0);
         });
     }
-
     bool mergeStanga() => grid.any(swipe);
     bool mergeDreapta() => grid.map((e) => e.reversed.toList()).any(swipe);
     bool mergeSus() => cols.any(swipe);
