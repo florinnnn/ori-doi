@@ -115,7 +115,8 @@ class ori_doiState extends State<ori_doi> with TickerProviderStateMixin
         });
         
         grid[1][2].val = 4;
-        grid[3][2].val = 16;
+        grid[0][2].val = 2;
+        grid[3][2].val = 2;
         
         flattenedGrid.forEach((element) => element.resetAnimatii());
     }
